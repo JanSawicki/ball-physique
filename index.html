@@ -1,1 +1,329 @@
-<h2> TEST <h2>
+<div class="outer-center">
+  <div class="inner-center">
+    <h1>Ball</h1>
+    <div>
+      <strong>SPACE</strong>- fire the ball<br />
+      <strong>G</strong> - set a new goal
+    </div>
+  </div>
+  <canvas
+    class="inner-center black-background"
+    id="myCanvas"
+    width="1280"
+    height="720"
+  ></canvas>
+  <div class="inner-center">Points</div>
+  <strong><div id="points" class="inner-center">0</div></strong>
+  <div id="parameters" class="inner-center">
+    <table>
+      <tr>
+        <td>
+          <div>ballRadius</div>
+          <input
+            id="ballRadius"
+            width="4"
+            name="ballRadius"
+            type="number"
+            value="5"
+          />
+        </td>
+        <td>
+          <div>goalRadius</div>
+          <input
+            id="goalRadius"
+            width="4"
+            name="goalRadius"
+            type="number"
+            value="50"
+          />
+        </td>
+
+        <td>
+          <div>miu</div>
+          <input id="miu" width="4" name="miu" type="number" value="0.2" />
+        </td>
+        <td>
+          <div>f</div>
+          <input id="f" width="4" name="f" type="number" value="300" />
+        </td>
+        <td>
+          <div>collisionLossCoefficient</div>
+          <input
+            id="collisionLossCoefficient"
+            width="4"
+            name="collisionLossCoefficient"
+            type="number"
+            value="0.5"
+          />
+        </td>
+        <td>
+          <div>m</div>
+          <input id="m" width="4" name="m" type="number" value="0.5" />
+        </td>
+        <td>
+          <div>g</div>
+          <input id="g" width="4" name="g" type="number" value="10" />
+        </td>
+        <td>
+          <div>b</div>
+          <input id="b" width="4" name="b" type="number" value="0.1" />
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+<style>
+  .centerAbsolute {
+    background: black;
+
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -360px;
+    margin-left: -640px;
+  }
+  .outer-center {
+    width: 100%;
+  }
+  .inner-center {
+    display: table;
+    text-align: center;
+    margin: 0 auto;
+  }
+  .black-background {
+    background: black;
+  }
+</style>
+
+<script>
+  var canvas = document.getElementById("myCanvas");
+  var ctx = canvas.getContext("2d");
+
+  middleX = canvas.width / 2;
+  middleY = canvas.height / 2;
+
+  var dT = 0;
+  Object.defineProperty(this, "ballRadius", {
+    get: function() {
+      return document.getElementById("ballRadius").value;
+    },
+    set: function(value) {}
+  });
+  Object.defineProperty(this, "goalRadius", {
+    get: function() {
+      return document.getElementById("goalRadius").value;
+    },
+    set: function(value) {}
+  });
+  var goalY = -goalRadius;
+  var goalX = -goalRadius;
+  Object.defineProperty(this, "miu", {
+    get: function() {
+      return document.getElementById("miu").value;
+    },
+    set: function(value) {}
+  });
+  Object.defineProperty(this, "f", {
+    get: function() {
+      return document.getElementById("f").value;
+    },
+    set: function(value) {}
+  });
+  Object.defineProperty(this, "collisionLossCoefficient", {
+    get: function() {
+      return document.getElementById("collisionLossCoefficient").value;
+    },
+    set: function(value) {}
+  });
+  Object.defineProperty(this, "g", {
+    get: function() {
+      return document.getElementById("g").value;
+    },
+    set: function(value) {}
+  });
+  Object.defineProperty(this, "m", {
+    get: function() {
+      return document.getElementById("m").value;
+    },
+    set: function(value) {}
+  });
+  Object.defineProperty(this, "b", {
+    get: function() {
+      return document.getElementById("b").value;
+    },
+    set: function(value) {}
+  });
+  var cannonLength = 80;
+  var cannonWidth = ballRadius * 3;
+  var cannonX = cannonWidth;
+  var cannonY = canvas.height - cannonWidth;
+  var cannonAngle = 45;
+  var upPressed = false;
+  var downPressed = false;
+
+  var x, y, vX, vY, fX, fY;
+  function initializeBall() {
+    x = Math.cos((cannonAngle * Math.PI) / 180) * cannonLength;
+    y = canvas.height - Math.sin((cannonAngle * Math.PI) / 180) * cannonLength;
+    vX = 0;
+    vY = 0;
+
+    dT = 0.1;
+    fX = 0;
+    fY = 0;
+  }
+
+  document.addEventListener("keydown", keyDownHandler, false);
+  document.addEventListener("keyup", keyUpHandler, false);
+
+  function keyDownHandler(e) {
+    if (e.key == "Up" || e.key == "ArrowUp") {
+      upPressed = true;
+    } else if (e.key == "Down" || e.key == "ArrowDown") {
+      downPressed = true;
+    }
+  }
+
+  function keyUpHandler(e) {
+    if (e.key == "Up" || e.key == "ArrowUp") {
+      upPressed = false;
+    } else if (e.key == "Down" || e.key == "ArrowDown") {
+      downPressed = false;
+    }
+    if (e.key == " " || e.keyCode == 32) {
+      fireBall();
+    }
+    if (e.key == "g" || e.key == "71") {
+      generateNewGoal();
+    }
+  }
+
+  function fireBall() {
+    initializeBall();
+    fX = f * Math.cos((cannonAngle * Math.PI) / 180);
+    fY = -f * Math.sin((cannonAngle * Math.PI) / 180);
+  }
+
+  function detectCollision() {
+    if (
+      Math.pow(x - goalX, 2) + Math.pow(y - goalY, 2) <=
+      Math.pow(goalRadius, 2)
+    ) {
+      return true;
+    }
+  }
+
+  function generateNewGoal() {
+    goalY = Math.min(
+      canvas.height,
+      Math.floor(Math.random() * canvas.height) + cannonLength
+    );
+    goalX = Math.max(
+      0,
+      Math.floor(Math.random() * canvas.width) - cannonLength
+    );
+  }
+
+  function addPoint() {
+    var pointsTextbox = document.getElementById("points");
+    var points = Number(pointsTextbox.innerHTML) + 1;
+    pointsTextbox.innerHTML = points;
+  }
+
+  function drawForceIndicators() {}
+
+  function drawBall() {
+    ctx.beginPath();
+    ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  function drawCannon() {
+    ctx.beginPath();
+    ctx.save();
+
+    ctx.translate(0, canvas.height);
+
+    ctx.rotate((-cannonAngle * Math.PI) / 180);
+
+    // ctx.lineWidth = 1;
+    // ctx.strokeStyle = "#FF0000";
+    // ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+    ctx.rect(0, -cannonWidth / 2, cannonLength, cannonWidth);
+
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    ctx.restore();
+    ctx.closePath();
+  }
+
+  function drawGoal() {
+    ctx.beginPath();
+    ctx.save();
+
+    ctx.arc(goalX, goalY, goalRadius, 0, Math.PI * 2);
+
+    ctx.fillStyle = "#FF95DD";
+    ctx.fill();
+    ctx.restore();
+    ctx.closePath();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBall();
+    drawCannon();
+    drawGoal();
+
+    console.log(dT);
+
+    if (x + vX > canvas.width - ballRadius || x + vX < ballRadius) {
+      fX = -fX * collisionLossCoefficient;
+    }
+    if (y + vY > canvas.height - ballRadius || y + vY < ballRadius) {
+      fY = -fY * collisionLossCoefficient;
+    }
+
+    if (upPressed) {
+      cannonAngle += 0.5;
+      if (cannonAngle >= 90) {
+        cannonAngle = 90;
+      }
+    } else if (downPressed) {
+      cannonAngle -= 0.5;
+      if (cannonAngle <= 0) {
+        cannonAngle = 0;
+      }
+    }
+
+    fX =
+      fX -
+      Math.sign(fX) * b * Math.abs(vX) -
+      (y == canvas.height - ballRadius ? fX * miu : 0);
+    if (Math.abs(fX) < 0.01) fX = 0;
+    fY = fY - Math.sign(fY) * b * Math.abs(vY) + m * g;
+    if (Math.abs(fY) < 0.01) fY = 0;
+
+    vX = (fX / m) * dT;
+    vY = (fY / m) * dT;
+
+    x += vX;
+    if (x >= canvas.width - ballRadius) {
+      x = canvas.width - ballRadius;
+    }
+    y += vY;
+    if (y >= canvas.height - ballRadius) {
+      y = canvas.height - ballRadius;
+    }
+
+    if (detectCollision()) {
+      addPoint();
+      generateNewGoal();
+    }
+  }
+
+  setInterval(draw, 10);
+</script>
