@@ -2,9 +2,8 @@
   <div class="inner-center">
     <h1>Ball</h1>
     <div>
-	  <strong>UP, DOWN</strong> - move cannon; 
-      <strong>SPACE</strong>- fire the ball; 
-      <strong>G</strong> - set a new goal
+      <strong>UP, DOWN</strong> - move cannon; <strong>SPACE</strong>- fire the
+      ball; <strong>G</strong> - set a new goal
     </div>
   </div>
   <canvas
@@ -19,7 +18,7 @@
     <table>
       <tr>
         <td>
-          <div>ballRadius</div>
+          <div>ball radius</div>
           <input
             id="ballRadius"
             width="4"
@@ -29,7 +28,7 @@
           />
         </td>
         <td>
-          <div>goalRadius</div>
+          <div>goal radius</div>
           <input
             id="goalRadius"
             width="4"
@@ -40,34 +39,47 @@
         </td>
 
         <td>
-          <div>miu</div>
+          <div>miu - friction coefficient</div>
           <input id="miu" width="4" name="miu" type="number" value="0.2" />
         </td>
         <td>
-          <div>f</div>
+          <div>f - force of shooting</div>
           <input id="f" width="4" name="f" type="number" value="300" />
         </td>
         <td>
-          <div>collisionLossCoefficient</div>
-          <input
-            id="collisionLossCoefficient"
-            width="4"
-            name="collisionLossCoefficient"
-            type="number"
-            value="0.5"
-          />
+          <div>
+            e -
+            <a href="https://en.wikipedia.org/wiki/Coefficient_of_restitution"
+              >coefficient of restitution</a
+            >
+          </div>
+          <input id="e" width="4" name="e" type="number" value="0.5" />
         </td>
         <td>
-          <div>m</div>
+          <div>m - ball mass</div>
           <input id="m" width="4" name="m" type="number" value="0.5" />
         </td>
         <td>
-          <div>g</div>
+          <div>g - gravitational accelaration</div>
           <input id="g" width="4" name="g" type="number" value="10" />
         </td>
         <td>
-          <div>b</div>
-          <input id="b" width="4" name="b" type="number" value="0.1" />
+          <div>
+            b -
+            <a href="https://en.wikipedia.org/wiki/Viscosity"
+              >environment viscosity</a
+            >
+          </div>
+          <input
+            id="b"
+            width="4"
+            name="b"
+            type="number"
+            oninput="validatePositive('b')"
+            min="0"
+            step="0.01"
+            value="0.1"
+          />
         </td>
       </tr>
     </table>
@@ -130,9 +142,9 @@
     },
     set: function(value) {}
   });
-  Object.defineProperty(this, "collisionLossCoefficient", {
+  Object.defineProperty(this, "e", {
     get: function() {
-      return document.getElementById("collisionLossCoefficient").value;
+      return document.getElementById("e").value;
     },
     set: function(value) {}
   });
@@ -169,9 +181,17 @@
     vX = 0;
     vY = 0;
 
-    dT = 0.1;
+    dT = 0.01;
     fX = 0;
     fY = 0;
+  }
+
+  function validatePositive(id) {
+    if (
+      document.getElementById(id).value < 0 ||
+      isNaN(document.getElementById(id).value)
+    )
+      document.getElementById(id).value = 0;
   }
 
   document.addEventListener("keydown", keyDownHandler, false);
@@ -220,7 +240,7 @@
       Math.floor(Math.random() * canvas.height) + cannonLength
     );
     goalX = Math.max(
-      0,
+      cannonLength,
       Math.floor(Math.random() * canvas.width) - cannonLength
     );
   }
@@ -282,10 +302,10 @@
     console.log(dT);
 
     if (x + vX > canvas.width - ballRadius || x + vX < ballRadius) {
-      fX = -fX * collisionLossCoefficient;
+      fX = -fX * e;
     }
     if (y + vY > canvas.height - ballRadius || y + vY < ballRadius) {
-      fY = -fY * collisionLossCoefficient;
+      fY = -fY * e;
     }
 
     if (upPressed) {
